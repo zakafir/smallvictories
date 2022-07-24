@@ -33,12 +33,14 @@ package com.raywenderlich.android.smallvictories
 
 import android.support.test.espresso.Espresso.onView
 import android.support.test.espresso.action.ViewActions.*
+import android.support.test.espresso.assertion.ViewAssertions.doesNotExist
 import android.support.test.espresso.assertion.ViewAssertions.matches
 import android.support.test.espresso.matcher.ViewMatchers.*
 import android.support.test.filters.LargeTest
 import android.support.test.rule.ActivityTestRule
 import android.support.test.runner.AndroidJUnit4
 import android.widget.EditText
+import android.widget.TextView
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.instanceOf
 import org.junit.Rule
@@ -80,4 +82,38 @@ class MainActivityTest {
     onView(allOf(withId(R.id.textVictoryTitle), withText(newTitle)))
         .check(matches(isDisplayed()))
   }
+    
+    @Test
+    fun incrementingVictoryCountUpdatesCountView() {
+        val previousCountString = rule.activity.findViewById<TextView>(
+            R.id.textVictoryCount
+        ).text.toString()
+        
+        val previousCount = if (previousCountString.isBlank()) 0 else previousCountString.toInt()
+        onView((withId(R.id.fab))).perform(click())
+        onView(
+            allOf(
+                withId(R.id.textVictoryCount),
+                withText((previousCount + 1).toString())
+            )
+        ).check(matches(isDisplayed()))
+    }
+    
+    @Test
+    fun editingTitleDoesntChangeCount() {
+        onView(withId(R.id.fab))
+            .perform(click())
+        
+        onView(withId(R.id.textVictoryTitle))
+            .perform(click())
+        val newTitle = "the new title"
+        onView(instanceOf(EditText::class.java))
+            .perform(clearText())
+            .perform(typeText(newTitle))
+        onView(withText(R.string.dialog_ok))
+            .perform(click())
+        
+        onView(allOf(withId(R.id.textVictoryCount), withText("0")))
+            .check(doesNotExist())
+    }
 }
